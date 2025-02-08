@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |s|
   s.name = 'iptoasn-data'
-  s.version = '1.2025.2'
+  s.version = '1.2025.3'
   s.authors = ['OMAR']
   s.summary = 'The IP to ASN dataset wrapped in a Ruby gem'
   s.description = "This gem wraps the IP to ASN dataset."
