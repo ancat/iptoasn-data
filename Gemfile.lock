@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    iptoasn-data (1.2025.3)
-      iptoasn (~> 1.1.0)
+    iptoasn-data (1.2025.4)
+      iptoasn (~> 1)
 
 GEM
   remote: https://rubygems.org/
