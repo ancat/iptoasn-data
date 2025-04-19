@@ -11,3 +11,10 @@ index:
 
 clean:
 	rm -rf tmp
+	rm *.gem
+
+bump:
+	ruby bump_version.rb
+
+build:
+	gem build iptoasn-data.gemspec --output release.gem
