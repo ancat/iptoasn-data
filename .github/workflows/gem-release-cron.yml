@@ -30,13 +30,13 @@ jobs:
         if diff -w /tmp/old_version.txt /tmp/new_version.txt
         then
             echo no need to build
-            echo "PUSH_GEM=no"
+            echo "PUSH_GEM=no" >> "$GITHUB_OUTPUT"
         else
             make build
-            echo "PUSH_GEM=yes"
+            echo "PUSH_GEM=yes" >> "$GITHUB_OUTPUT"
         fi
     - name: Publish to RubyGems
-      if: steps.fetch-and-build.outputs.PUSH_GEM == "yes"
+      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes'
       run: |
         mkdir -p $HOME/.gem
         touch $HOME/.gem/credentials
