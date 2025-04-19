@@ -43,13 +43,13 @@ jobs:
             echo "PUSH_GEM=yes" >> "$GITHUB_OUTPUT"
         fi
     - name: Publish to RubyGems
-      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || github.event.inputs.force_build == true
+      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || github.event.inputs.force_release == true
       run: |
         mkdir -p $HOME/.gem
         touch $HOME/.gem/credentials
         chmod 0600 $HOME/.gem/credentials
         printf -- "---\n:rubygems_api_key: ${GEM_HOST_API_KEY}\n" > $HOME/.gem/credentials
-        if [[ "$FORCE_BUILD" == "true" ]]
+        if [[ "$FORCE_RELEASE" == "true" ]]
         then
           gem push release.gem || exit 0
         else
@@ -57,18 +57,18 @@ jobs:
         fi
       env:
         GEM_HOST_API_KEY: "${{secrets.RUBYGEMS_AUTH_TOKEN}}"
-        FORCE_BUILD: "${{ github.event.inputs.force_build }}"
+        FORCE_RELEASE: "${{ github.event.inputs.force_release }}"
     - name: Push changes back to repository
-      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || github.event.inputs.force_build == true
+      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || github.event.inputs.force_release == true
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -a -m "Scheduled Updates [$(cat version.txt)]"
-        if [[ "$FORCE_BUILD" == "true" ]]
+        if [[ "$FORCE_RELEASE" == "true" ]]
         then
           git push || exit 0
         else
           git push
         fi
       env:
-        FORCE_BUILD: "${{ github.event.inputs.force_build }}"
+        FORCE_RELEASE: "${{ github.event.inputs.force_release }}"
