@@ -49,13 +49,26 @@ jobs:
         touch $HOME/.gem/credentials
         chmod 0600 $HOME/.gem/credentials
         printf -- "---\n:rubygems_api_key: ${GEM_HOST_API_KEY}\n" > $HOME/.gem/credentials
-        gem push release.gem
+        if [[ "$FORCE_BUILD" == "true" ]]
+        then
+          gem push release.gem || exit 0
+        else
+          gem push release.gem
+        fi
       env:
         GEM_HOST_API_KEY: "${{secrets.RUBYGEMS_AUTH_TOKEN}}"
+        FORCE_BUILD: "${{ github.event.inputs.force_build }}"
     - name: Push changes back to repository
       if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || github.event.inputs.force_build == true
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -a -m "Scheduled Updates [$(cat version.txt)]"
-        git push || exit 0
+        if [[ "$FORCE_BUILD" == "true" ]]
+        then
+          git push || exit 0
+        else
+          git push
+        fi
+      env:
+        FORCE_BUILD: "${{ github.event.inputs.force_build }}"
