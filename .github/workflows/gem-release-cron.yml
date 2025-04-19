@@ -1,6 +1,13 @@
 name: Gem Release Cron
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force a release'
+        required: false
+        default: false
+        type: boolean
   
 jobs:
   build:
@@ -36,13 +43,19 @@ jobs:
             echo "PUSH_GEM=yes" >> "$GITHUB_OUTPUT"
         fi
     - name: Publish to RubyGems
-      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes'
+      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || input.force_build == true
       run: |
         mkdir -p $HOME/.gem
         touch $HOME/.gem/credentials
         chmod 0600 $HOME/.gem/credentials
         printf -- "---\n:rubygems_api_key: ${GEM_HOST_API_KEY}\n" > $HOME/.gem/credentials
-        # gem push release.gem
-        echo "We normally would have pushed."
+        gem push release.gem
       env:
         GEM_HOST_API_KEY: "${{secrets.RUBYGEMS_AUTH_TOKEN}}"
+    - name: Push changes back to repository
+      if: steps.fetch-and-build.outputs.PUSH_GEM == 'yes' || input.force_build == true
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git commit -a -m "Scheduled Updates [$(cat version.txt)]"
+        git push || exit 0
