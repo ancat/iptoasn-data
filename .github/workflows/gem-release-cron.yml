@@ -1,0 +1,48 @@
+name: Gem Release Cron
+
+on: [workflow_dispatch]
+  
+jobs:
+  build:
+    name: Build + Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Ruby 3.X
+      uses: ruby/setup-ruby@ca041f971d66735f3e5ff1e21cc13e2d51e7e535 # v1.233.0
+      with:
+        ruby-version: '3.0'
+    - name: Fetch latest dataset and build
+      id: fetch-and-build
+      run: |
+        make fetch
+        make process
+        make index
+        cat version.txt > /tmp/old_version.txt
+        make bump # does nothing if there's no changes to lib/iptoasn/data/
+        cat version.txt > /tmp/new_version.txt
+
+        # build the gem only if there's any changes
+        if diff -w /tmp/old_version.txt /tmp/new_version.txt
+        then
+            echo no need to build
+            echo "PUSH_GEM=no"
+        else
+            make build
+            echo "PUSH_GEM=yes"
+        fi
+    - name: Publish to RubyGems
+      if: steps.fetch-and-build.outputs.PUSH_GEM == "yes"
+      run: |
+        mkdir -p $HOME/.gem
+        touch $HOME/.gem/credentials
+        chmod 0600 $HOME/.gem/credentials
+        printf -- "---\n:rubygems_api_key: ${GEM_HOST_API_KEY}\n" > $HOME/.gem/credentials
+        # gem push release.gem
+        echo "We normally would have pushed."
+      env:
+        GEM_HOST_API_KEY: "${{secrets.RUBYGEMS_AUTH_TOKEN}}"
